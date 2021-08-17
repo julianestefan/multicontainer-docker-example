@@ -1,0 +1,21 @@
+language: generic 
+sudo: required
+srvices: 
+ - docker
+
+before_install:
+  - dokcer build -t gearthlogic/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true gearthlogic/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t gearthlogic/multi-client ./client
+  - docker build -t gearthlogic/multi-nginx ./nginx
+  - docker build -t gearthlogic/multi-server ./server
+  - docker build -t gearthlogic/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin 
+  - docker push gearthlogic/multi-client
+  - docker push gearthlogic/multi-nginx
+  - docker push gearthlogic/multi-server
+  - docker push gearthlogic/multi-worker
